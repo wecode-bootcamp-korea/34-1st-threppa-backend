@@ -12,19 +12,20 @@ class Collection(models.Model):
     class Meta:
         db_table = 'collections'
 
-class Gender(models.Model):
-    name = models.CharField(max_length=45)
+class GenderType(models.Model):
+    type = models.CharField(max_length=45)
 
     class Meta:
-        db_table = 'genders'
+        db_table = 'gender_types'
 
 class Product(models.Model):
-    product_name = models.CharField(max_length=45)
-    price        = models.IntegerField()
-    genders      = models.ForeignKey(Gender, on_delete=models.CASCADE, related_name="gender_products")
-    is_adult     = models.BooleanField(default=True)
-    collections  = models.ForeignKey(Collection, on_delete=models.CASCADE, related_name="collection_products")
-    categories   = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="category_products")
+    name       = models.CharField(max_length=45)
+    price      = models.DecimalField(10, 2)
+    gender     = models.ForeignKey(GenderType, on_delete=models.CASCADE, related_name="gender_type_products")
+    is_adult   = models.BooleanField(default=True)
+    collection = models.ForeignKey(Collection, on_delete=models.CASCADE, related_name="collection_products")
+    category   = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="category_products")
+    created_at = models.DateField(auto_now_add=True)
 
     class Meta:
         db_table = 'products'
@@ -35,31 +36,31 @@ class Color(models.Model):
     class Meta:
         db_table = 'colors'
 
-class Product_Color(models.Model):
-    products = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="product_products_colors")
-    colors   = models.ForeignKey(Color, on_delete=models.CASCADE, related_name="color_products_colors")
-
-
-    class Meta:
-        db_table = 'products_colors'
-
-class Product_Color_Image_Url(models.Model):
-    products_colors = models.ForeignKey(Product_Color, on_delete=models.CASCADE, related_name="product_color_products_colors_image_urls")
-    url             = models.CharField(max_length=200)
-
-    class Meta:
-        db_table = 'products_colors_image_urls'
-
 class Size(models.Model):
     size = models.CharField(max_length=45)
 
     class Meta:
         db_table = 'sizes'
 
-class Product_Option(models.Model):
-    products_colors_images = models.ForeignKey(Product_Color_Image_Url, on_delete=models.CASCADE, related_name="product_color_image_url_product_options")
-    sizes                  = models.ForeignKey(Size, on_delete=models.CASCADE, related_name="size_product_options")
-    stock                  = models.IntegerField()
+class ImageUrl(models.Model):
+    url = models.CharField(max_length=200)
+
+    class Meta:
+        db_table = 'image_urls'
+
+class ProductColorImage(models.Model):
+    product   = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="product_product_color_images")
+    color     = models.ForeignKey(Color, on_delete=models.CASCADE, related_name="color_product_color_images")
+    image_url = models.ForeignKey(ImageUrl, on_delete=models.CASCADE, related_name="image_url_product_color_images")
+
+    class Meta:
+        db_table = 'product_color_images'
+
+class ProductOption(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="product_product_options")
+    color   = models.ForeignKey(Color, on_delete=models.CASCADE, related_name="color_product_options")
+    sizes   = models.ForeignKey(Size, on_delete=models.CASCADE, related_name="size_product_options")
+    stock   = models.IntegerField()
 
     class Meta:
         db_table = 'product_options'
