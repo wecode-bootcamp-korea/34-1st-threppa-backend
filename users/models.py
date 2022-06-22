@@ -18,7 +18,7 @@ class User(models.Model):
 class Review(models.Model):
     user         = models.ForeignKey(User, on_delete=models.CASCADE)
     product      = models.ForeignKey("products.Product", on_delete=models.CASCADE, related_name="product_reviews")
-    review_text  = models.TextField()
+    text         = models.TextField()
     created_at   = models.DateField(auto_now_add=True)
 
     class Meta:
