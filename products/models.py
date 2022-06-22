@@ -43,8 +43,8 @@ class Size(models.Model):
         db_table = 'sizes'
 
 class ProductColorImage(models.Model):
-    product   = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="product_product_color_images")
-    color     = models.ForeignKey(Color, on_delete=models.CASCADE, related_name="color_product_color_images")
+    product   = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="product_products_colors_images")
+    color     = models.ForeignKey(Color, on_delete=models.CASCADE, related_name="color_products_colors_images")
     image_url = models.URLField()
     
     class Meta:
