@@ -1,14 +1,14 @@
 import json
+
 import bcrypt
 import jwt
-
 from django.http            import JsonResponse
 from django.core.exceptions import ValidationError
 from django.views           import View
+from django.conf            import settings
 
 from users.models           import User
 from users.validator        import validate_email, validate_password
-from threppa.settings     import SECRET_KEY, ALGORITHM
 
 class SighUpView(View):
     def post(self, request):
@@ -54,9 +54,6 @@ class LogInView(View):
             email_insert    = data['email']
             password_insert = data['password']
 
-            if not User.objects.filter(email = email_insert).exists():
-                return JsonResponse({"message" : "INVALID_USER"}, status = 401)
-
             user = User.objects.get(email = email_insert)
 
             password_db_encoded     = user.password.encode('utf-8')
@@ -65,9 +62,12 @@ class LogInView(View):
             if not bcrypt.checkpw(password_insert_encoded, password_db_encoded):
                 return JsonResponse({"message" : "INVALID_USER"}, status = 401)
 
-            access_token = jwt.encode({"id" : user.id}, SECRET_KEY, algorithm = ALGORITHM)
+            access_token = jwt.encode({"id" : user.id}, settings.SECRET_KEY, algorithm = settings.ALGORITHM)
 
             return JsonResponse({"access_token" : access_token}, status=200)
 
         except KeyError:
             return JsonResponse({"message" : "KEYERROR"}, status = 400)
+
+        except User.DoesNotExist:
+            return JsonResponse({"message" : "INVALID_USER"}, status = 401)
