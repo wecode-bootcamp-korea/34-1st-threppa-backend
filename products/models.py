@@ -54,7 +54,15 @@ class ProductOption(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="product_product_options")
     color   = models.ForeignKey(Color, on_delete=models.CASCADE, related_name="color_product_options")
     size    = models.ForeignKey(Size, on_delete=models.CASCADE, related_name="size_product_options")
-    stock   = models.IntegerField()
+    stock   = models.IntegerField(null=True)
 
     class Meta:
         db_table = 'product_options'
+
+class Cart(models.Model):
+    user           = models.ForeignKey("users.User", on_delete=models.CASCADE, related_name="user_carts")
+    product_option = models.ForeignKey(ProductOption, on_delete=models.CASCADE, related_name="product_option_carts")
+    count          = models.IntegerField(null=True)
+
+    class Meta:
+        db_table = 'carts'
