@@ -8,7 +8,6 @@ class User(models.Model):
     password         = models.CharField(max_length=200)
     phone_number     = models.CharField(max_length=100, unique=True)
     created_at       = models.DateField(auto_now_add=True)
-    # carts            = models.ManyToManyField("products.ProductOption", related_name="Cart")
     wish_lists       = models.ManyToManyField("products.ProductOption", related_name="Wish_list")
 
     class Meta:
