@@ -8,18 +8,11 @@ from products.models import *
 from products.utils  import login_decorator
 
 class ProductDetailView(View):
-    def get(self, request):
+    def get(self, request, product_id):
         try:
-            data     = json.loads(request.body)
-            product  = Product.objects.get(id = data['product_id'])
-            sizes_db = Size.objects.all()
-            
-            sizes =[{ 
-                'id'   : size_db.id,
-                'size' : size_db.size
-            } for size_db in sizes_db ]
+            product = Product.objects.get(id = product_id)
 
-            product_color_images = ProductColorImage.objects.filter(product_id = data['product_id'])
+            product_color_images = product.product_products_colors_images.all()
 
             colors = [{
                 'id'        : product_color.color.id,
@@ -31,11 +24,26 @@ class ProductDetailView(View):
                 'product_id' : product.id,
                 'name'       : product.name,
                 'price'      : product.price,
-                'colors'     : colors,
-                'sizes'      : sizes
+                'colors'     : colors
             }
 
             return JsonResponse({"results": product_detail}, status=201)
 
         except Product.DoesNotExist:
+            return JsonResponse({"message": "DOES_NOT_EXIST"}, status=400)
+
+class SizeView(View):
+    def get(self, request):
+        try:
+
+            sizes_db = Size.objects.all()
+            
+            sizes =[{ 
+                'id'   : size_db.id,
+                'size' : size_db.size
+            } for size_db in sizes_db ]
+
+            return JsonResponse({"results": sizes}, status=201)
+        
+        except Size.DoesNotExist:
             return JsonResponse({"message": "DOES_NOT_EXIST"}, status=400)
