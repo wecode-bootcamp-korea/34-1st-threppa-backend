@@ -34,16 +34,4 @@ class ProductDetailView(View):
 
 class SizeView(View):
     def get(self, request):
-        try:
-
-            sizes_db = Size.objects.all()
-            
-            sizes =[{ 
-                'id'   : size_db.id,
-                'size' : size_db.size
-            } for size_db in sizes_db ]
-
-            return JsonResponse({"results": sizes}, status=201)
-        
-        except Size.DoesNotExist:
-            return JsonResponse({"message": "DOES_NOT_EXIST"}, status=400)
+        return JsonResponse({"sizes" : list(Size.objects.values("id", "size"))}, status=200)
