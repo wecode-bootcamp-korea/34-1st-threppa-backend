@@ -1,11 +1,12 @@
 import json
 
-from django.http  import JsonResponse
-from django.views import View
-from django.db    import transaction, IntegrityError
+from django.http      import JsonResponse
+from django.views     import View
+from django.db.models import Q
+from django.db        import transaction, IntegrityError
 
-from products.models import *
-from products.utils  import login_decorator
+from products.models  import *
+from products.utils   import login_decorator
 
 class ProductDetailView(View):
     def get(self, request, product_id):
@@ -46,20 +47,16 @@ class CartView(View):
 
             product_option_id = ProductOption.objects.get(
                 product_id = data['product_id'],
-                color_id   = data['color_id'],
-                size_id    = data['size_id']
+                color_id   = Color.objects.get(name = data['color']).id,
+                size_id    = Size.objects.get(sizes = data['size']).id
             ).id
 
-            cart_object = Cart.objects.filter(user_id = user.id, product_option_id = product_option_id)
+            object, created = Cart.objects.update_or_create(
+                user_id = user.id, product_option_id = product_option_id, 
+                defaults={'quantity': data['quantity']}
+                )
 
-            if not cart_object.exists():
-                Cart.objects.create(user_id = user.id, product_option_id = product_option_id)
-                cart_object.update(quantity = data['quantity'])
-                return JsonResponse({"message" : "CREATE_CART_SUCCESS"}, status=201)
-
-            else:
-                cart_object.update(quantity = data['quantity'])
-                return JsonResponse({"message" : "UPDATE_CART_SUCCESS"}, status=201)
+            return JsonResponse({"message" : "UPDATE_CART_SUCCESS"}, status=201)
 
         except KeyError:
             return JsonResponse({"message" : "KEYERROR"}, status = 400)
@@ -68,29 +65,16 @@ class CartView(View):
     def get(self, request):
         user  = request.user
 
-        carts = Cart.objects.filter(user_id = user.id)
+        carts_dbs = Cart.objects.filter(user_id = user.id)
 
-        cart_detial =[{
-            'product_id'   : cart.product_option.product.id,
-            'product_name' : cart.product_option.product.name,
-            'color'        : cart.product_option.color.name,
-            'size'         : cart.product_option.size.sizes,
-            'quantity'     : cart.quantity,
-            #  'image_url'    : cart.product_option.color.color_products_colors_images.image_url
-        } for cart in carts ]
+        carts =[{
+            'product_id'   : carts_db.product_option.product.id,
+            'product_name' : carts_db.product_option.product.name,
+            'color'        : carts_db.product_option.color.name,
+            'size'         : carts_db.product_option.size.sizes,
+            'quantity'     : carts_db.quantity,
+            'price'        : carts_db.product_option.product.price,
+            'image_url'    : carts_db.product_option.color.color_products_colors_images.first().image_url
+        } for carts_db in carts_dbs ]
             
-        return JsonResponse({"result": cart_detial}, status=200)
-
-
-
-
-class ProductListView(View):
-    def get(self, request):
-
-        product = Product.objects.all()
-
-
-
-
-
-        return JsonResponse({"result": "result"}, status=200)
+        return JsonResponse({"result": carts}, status=200)
