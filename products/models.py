@@ -37,7 +37,7 @@ class Color(models.Model):
         db_table = 'colors'
 
 class Size(models.Model):
-    size = models.CharField(max_length=45)
+    sizes = models.CharField(max_length=45)
 
     class Meta:
         db_table = 'sizes'
@@ -62,7 +62,7 @@ class ProductOption(models.Model):
 class Cart(models.Model):
     user           = models.ForeignKey("users.User", on_delete=models.CASCADE, related_name="user_carts")
     product_option = models.ForeignKey(ProductOption, on_delete=models.CASCADE, related_name="product_option_carts")
-    count          = models.IntegerField(null=True)
+    quantity       = models.IntegerField(null=True)
 
     class Meta:
         db_table = 'carts'
