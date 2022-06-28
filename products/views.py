@@ -20,7 +20,7 @@ class ProductDetailView(View):
                 'image_url' : product_color_image.image_url
             } for product_color_image in product_color_images ]
 
-            product_detail ={
+            product_detail = {
                 'product_id' : product.id,
                 'name'       : product.name,
                 'price'      : product.price,
@@ -80,3 +80,17 @@ class CartView(View):
         } for cart in carts ]
             
         return JsonResponse({"result": cart_detial}, status=200)
+
+
+
+
+class ProductListView(View):
+    def get(self, request):
+
+        product = Product.objects.all()
+
+
+
+
+
+        return JsonResponse({"result": "result"}, status=200)

@@ -62,7 +62,7 @@ class ProductOption(models.Model):
 class Cart(models.Model):
     user           = models.ForeignKey("users.User", on_delete=models.CASCADE, related_name="user_carts")
     product_option = models.ForeignKey(ProductOption, on_delete=models.CASCADE, related_name="product_option_carts")
-    quantity          = models.IntegerField(null=True)
+    quantity       = models.IntegerField(null=True)
 
     class Meta:
         db_table = 'carts'
