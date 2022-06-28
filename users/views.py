@@ -27,6 +27,12 @@ class SighUpView(View):
             if User.objects.filter(email = email).exists():
                 return  JsonResponse( {"message" : "Email Already Exists"}, status = 400)
 
+            if User.objects.filter(username = username).exists():
+                return  JsonResponse( {"message" : "USERNAME Already Exists"}, status = 400)
+
+            if User.objects.filter(phone_number = phone_number).exists():
+                return  JsonResponse( {"message" : "PHONE_NUMBER Already Exists"}, status = 400)
+
             hashed_password_decoded  = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
             User.objects.create(
@@ -60,7 +66,7 @@ class LogInView(View):
             password_insert_encoded = password_insert.encode('utf-8')
 
             if not bcrypt.checkpw(password_insert_encoded, password_db_encoded):
-                return JsonResponse({"message" : "INVALID_USER"}, status = 401)
+                return JsonResponse({"message" : "INVALID_EMAIL"}, status = 401)
 
             access_token = jwt.encode({"id" : user.id}, settings.SECRET_KEY, algorithm = settings.ALGORITHM)
 
