@@ -42,10 +42,10 @@ class Size(models.Model):
     class Meta:
         db_table = 'sizes'
 
-class ProductColorImage(models.Model):
-    product   = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="product_products_colors_images")
-    color     = models.ForeignKey(Color, on_delete=models.CASCADE, related_name="color_products_colors_images")
-    image_url = models.URLField()
+class ProductColor(models.Model):
+    product   = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="colors")
+    color     = models.ForeignKey(Color, on_delete=models.CASCADE, related_name="colors")
+    url = models.URLField()
     
     class Meta:
         db_table = 'products_colors_images'
@@ -62,7 +62,7 @@ class ProductOption(models.Model):
 class Cart(models.Model):
     user           = models.ForeignKey("users.User", on_delete=models.CASCADE, related_name="user_carts")
     product_option = models.ForeignKey(ProductOption, on_delete=models.CASCADE, related_name="product_option_carts")
-    quantity       = models.IntegerField(null=True)
+    quantity       = models.IntegerField(default=0)
 
     class Meta:
         db_table = 'carts'
