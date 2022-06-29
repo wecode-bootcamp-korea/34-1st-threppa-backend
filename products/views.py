@@ -78,3 +78,43 @@ class CartView(View):
         } for carts_db in carts_dbs ]
             
         return JsonResponse({"result": carts}, status=200)
+
+class ProductListView(View):
+    def get(self, request):
+        category = request.GET.get('category_id')
+        collection = request.GET.get('collection_id')
+        color = request.GET.get('color_name')
+        # offset = int(request.GET.get('offset', 10))
+        # limit = int(request.GET.get('limit', 5))
+        
+        q = Q()
+        
+        if category:
+            q &= Q(category_id=category)
+        if collection:
+            q &= Q(collection_id=collection)
+        
+        products = Product.objects.filter(q)
+        # products = Product.objects.filter(category_id = category | collection_id = collection)
+        # colors =
+        
+        # colors = [{
+        #     'id'   : product.product_products_colors_images.first().color.id,
+        #     'name' : product.product_products_colors_images.first().color.name,
+        # } for product in products ]
+
+        # sizes = [{
+        #     'id'    : product.product_product_options.first().size.id,
+        #     'sizes' : product.product_product_options.first().size.sizes
+        # } for product in products ]
+
+        product = [{
+            "product_id" : product.id,
+            "product_name" : product.name,
+            "price" : product.price,
+            "image_url" : product.product_products_colors_images.first().image_url,
+            # "colors" : product.product_products_colors_images.first().color.name,
+            # "sizes" : product.product_product_options.first().size.sizes
+        }for product in products]
+
+        return JsonResponse({"result": product}, status=200)
