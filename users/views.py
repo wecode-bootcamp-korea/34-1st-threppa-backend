@@ -1,7 +1,7 @@
 import json
-
 import bcrypt
 import jwt
+
 from django.http            import JsonResponse
 from django.core.exceptions import ValidationError
 from django.views           import View
@@ -20,6 +20,8 @@ class SighUpView(View):
             email        = data['email']
             password     = data['password']
             phone_number = data['phone_number']
+    
+            # TODO : validate logic -> OOP refactoring
 
             validate_email(email)
             validate_password(password)
@@ -55,17 +57,15 @@ class SighUpView(View):
 class LogInView(View):
     def post(self, request):
         try:
-            data            = json.loads(request.body)
+            data     = json.loads(request.body)
+            email    = data['email']
+            password = data['password']
 
-            email_insert    = data['email']
-            password_insert = data['password']
+            validate_email(email)
 
-            user = User.objects.get(email = email_insert)
+            user = User.objects.get(email = email)
 
-            password_db_encoded     = user.password.encode('utf-8')
-            password_insert_encoded = password_insert.encode('utf-8')
-
-            if not bcrypt.checkpw(password_insert_encoded, password_db_encoded):
+            if not bcrypt.checkpw(user.password.encode('utf-8'), password.encode('utf-8')):
                 return JsonResponse({"message" : "INVALID_EMAIL"}, status = 401)
 
             access_token = jwt.encode({"id" : user.id}, settings.SECRET_KEY, algorithm = settings.ALGORITHM)
@@ -76,4 +76,4 @@ class LogInView(View):
             return JsonResponse({"message" : "KEYERROR"}, status = 400)
 
         except User.DoesNotExist:
-            return JsonResponse({"message" : "INVALID_USER"}, status = 401)
+            return JsonResponse({"message" : "INVALID_USER"}, status = 404)

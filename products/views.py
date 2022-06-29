@@ -3,32 +3,49 @@ import json
 from django.http      import JsonResponse
 from django.views     import View
 from django.db.models import Q
-from django.db        import transaction, IntegrityError
+from django.db        import IntegrityError
 
-from products.models  import *
-from products.utils   import login_decorator
+from products.models  import Product, ProductOption, Size, Cart, Color
+from products.utils   import login_required
 
-class ProductDetailView(View):
+class ProductView(View):
     def get(self, request, product_id):
         try:
+            """
+            {'id': 1, 'name': 'RED', 'image_url': 'http://............'},
+            {'id': 2, 'name': 'BLACK', 'image_url': 'http://............'},
+            {'id': 3, 'name': 'BLUE', 'image_url': 'http://............'},
+            {'id': 4, 'name': 'RED', 'image_url': 'http://............'},
+            {'id': 5, 'name': 'RED', 'image_url': 'http://............'},
+            {'id': 6, 'name': 'RED', 'image_url': 'http://............'}]
+
+            {
+                'RED': {
+                    'color_id': 1,
+                    'images': [
+                        'http://............',
+                        'http://............',
+                        'http://............',
+                        'http://............'
+                    ]
+                },
+                'BLACK': {'color_id': 1, 'images': ['http://............']},
+                'BLUE': {'color_id': 1, 'images': ['http://............']}}
+            """
             product = Product.objects.get(id = product_id)
+            colors  = {color["name"] : {'color_id' : color.color.id, 'images'   : []} for color in product.colors.all()}
 
-            product_color_images = product.product_products_colors_images.all()
+            for color in colors:
+                colors[color["name"]]['images'].append(color["url"])
 
-            colors = [{
-                'id'        : product_color_image.color.id,
-                'name'      : product_color_image.color.name,
-                'image_url' : product_color_image.image_url
-            } for product_color_image in product_color_images ]
-
-            product_detail = {
+            result = {
                 'product_id' : product.id,
                 'name'       : product.name,
                 'price'      : product.price,
                 'colors'     : colors
             }
 
-            return JsonResponse({"results" : product_detail}, status=200)
+            return JsonResponse({"result" : result}, status=200)
 
         except Product.DoesNotExist:
             return JsonResponse({"message" : "DOES_NOT_EXIST"}, status=400)
@@ -42,19 +59,23 @@ class CartView(View):
     def post(self, request):
         try:
             data = json.loads(request.body)
-
             user = request.user
 
-            product_option_id = ProductOption.objects.get(
+            product_option = ProductOption.objects.get(
                 product_id = data['product_id'],
-                color_id   = Color.objects.get(name = data['color']).id,
-                size_id    = Size.objects.get(sizes = data['size']).id
-            ).id
+                color_id   = data['color_id'],
+                size_id    = data['size_id']
+            )
 
-            object, created = Cart.objects.update_or_create(
-                user_id = user.id, product_option_id = product_option_id, 
-                defaults={'quantity': data['quantity']}
-                )
+            cart, created = Cart.objects.get_or_create(
+                user_id           = user.id,
+                product_option_id = product_option.id,
+                defaults          = {'quantity' : data['quantity']}
+            )
+
+            if not created:
+                cart.quantity += data['quantity']
+                cart.save()
 
             return JsonResponse({"message" : "UPDATE_CART_SUCCESS"}, status=201)
 
@@ -64,17 +85,18 @@ class CartView(View):
     @login_decorator
     def get(self, request):
         user  = request.user
-
-        carts_dbs = Cart.objects.filter(user_id = user.id)
+        carts = Cart.objects.filter(user_id = user.id)
 
         carts =[{
-            'product_id'   : carts_db.product_option.product.id,
-            'product_name' : carts_db.product_option.product.name,
-            'color'        : carts_db.product_option.color.name,
-            'size'         : carts_db.product_option.size.sizes,
-            'quantity'     : carts_db.quantity,
-            'price'        : carts_db.product_option.product.price,
-            'image_url'    : carts_db.product_option.color.color_products_colors_images.first().image_url
-        } for carts_db in carts_dbs ]
+            'product_id'   : cart.product_option.product.id,
+            'product_name' : cart.product_option.product.name,
+            'color'        : cart.product_option.color.name,
+            'size'         : cart.product_option.size.sizes,
+            'quantity'     : cart.quantity,
+            'price'        : cart.product_option.product.price,
+
+            # TODO : product image 테이블을 별도로 생성할 필요가 있습니다. (데이터 관리 + 코드 가독성 증가)
+            'image_url'    : cart.product_option.color.products_colors_images.first().image_url
+        } for cart in carts ]
             
         return JsonResponse({"result": carts}, status=200)
