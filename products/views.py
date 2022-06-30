@@ -27,7 +27,7 @@ class ProductView(View):
                 'colors'     : colors
             }
 
-            return JsonResponse({"results" : products}, status=200)
+            return JsonResponse({"products" : products}, status=200)
 
         except Product.DoesNotExist:
             return JsonResponse({"message" : "DOES_NOT_EXIST"}, status=400)
@@ -63,7 +63,7 @@ class ProductListView(View):
                             } for color in product.product_products_colors_images.all()]
         } for product in products ]
 
-        return JsonResponse({"result": products}, status=200)
+        return JsonResponse({"products": products}, status=200)
 
 class CategoryView(View):
     def get(self, request):
@@ -74,7 +74,7 @@ class CategoryView(View):
             "colors"     : list(Color.objects.values("id", "name"))
         }
 
-        return JsonResponse({"categories_sizes" : result}, status=200)
+        return JsonResponse({"categories" : result}, status=200)
 
 class CartView(View):
     @login_decorator
@@ -119,4 +119,4 @@ class CartView(View):
             'image_url'    : cart.product_option.color.color_products_colors_images.first().image_url
         } for cart in carts ]
             
-        return JsonResponse({"result": carts}, status=200)
+        return JsonResponse({"carts": carts}, status=200)
