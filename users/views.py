@@ -1,7 +1,7 @@
 import json
-
 import bcrypt
 import jwt
+
 from django.http            import JsonResponse
 from django.core.exceptions import ValidationError
 from django.views           import View
@@ -55,17 +55,16 @@ class SighUpView(View):
 class LogInView(View):
     def post(self, request):
         try:
-            data            = json.loads(request.body)
+            data     = json.loads(request.body)
 
-            email_insert    = data['email']
-            password_insert = data['password']
+            email    = data['email']
+            password = data['password']
 
-            user = User.objects.get(email = email_insert)
+            validate_email(email)
 
-            password_db_encoded     = user.password.encode('utf-8')
-            password_insert_encoded = password_insert.encode('utf-8')
+            user = User.objects.get(email = email)
 
-            if not bcrypt.checkpw(password_insert_encoded, password_db_encoded):
+            if not bcrypt.checkpw(password.encode('utf-8'), user.password.encode('utf-8')):
                 return JsonResponse({"message" : "INVALID_EMAIL"}, status = 401)
 
             access_token = jwt.encode({"id" : user.id}, settings.SECRET_KEY, algorithm = settings.ALGORITHM)
