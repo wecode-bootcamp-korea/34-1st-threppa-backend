@@ -4,7 +4,7 @@ from django.http      import JsonResponse
 from django.views     import View
 from django.db.models import Q
 
-from products.models  import Category, Product, ProductOption, Color, Size, Cart, Collection
+from products.models  import Product, ProductOption, Color, Size, Cart
 from products.utils   import login_decorator
 
 class ProductView(View):
