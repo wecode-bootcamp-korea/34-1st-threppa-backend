@@ -4,7 +4,7 @@ from django.http      import JsonResponse
 from django.views     import View
 from django.db.models import Q
 
-from products.models  import Product, ProductOption, Color, Size, Cart, Category
+from products.models  import Product, ProductOption, Color, Size, Cart, Category, Collection
 from products.utils   import login_decorator
 
 class ProductView(View):
@@ -120,3 +120,21 @@ class CartView(View):
         } for cart in carts ]
             
         return JsonResponse({"carts": carts}, status=200)
+
+class NavView(View):
+    def get(self, request):
+
+        result = {
+            "categories"  : list(Category.objects.values("id", "name")),
+            "collections" : list(Collection.objects.values("id", "name"))
+        }
+
+        return JsonResponse({"navs" : result}, status=200)
+
+class UserNavView(View):
+    @login_decorator
+    def get(self, request):
+
+        user = request.user
+
+        return JsonResponse({'full_name' : user.last_name + user.first_name}, status=200)
