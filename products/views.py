@@ -4,7 +4,7 @@ from django.http      import JsonResponse
 from django.views     import View
 from django.db.models import Q
 
-from products.models  import Product, ProductOption, Color, Size, Cart
+from products.models  import Product, ProductOption, Color, Size, Cart, Category
 from products.utils   import login_decorator
 
 class ProductView(View):
@@ -64,6 +64,17 @@ class ProductListView(View):
         } for product in products ]
 
         return JsonResponse({"result": products}, status=200)
+
+class CategoryView(View):
+    def get(self, request):
+
+        result = {
+            "categories" : list(Category.objects.values("id", "name")),
+            "sizes"      : list(Size.objects.values("id", "sizes")),
+            "colors"     : list(Color.objects.values("id", "name"))
+        }
+
+        return JsonResponse({"categories_sizes" : result}, status=200)
 
 class CartView(View):
     @login_decorator
