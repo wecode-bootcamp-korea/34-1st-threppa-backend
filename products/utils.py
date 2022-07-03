@@ -5,7 +5,7 @@ from django.http  import JsonResponse
 from users.models import User
 from django.conf  import settings
 
-def login_decorator(func):
+def login_required(func):
     def wrapper(self,request,*args,**kwargs):
         try:
             access_token = request.headers.get("Authorization",None)
