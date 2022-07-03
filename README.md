@@ -1,6 +1,9 @@
-# Threppa Backend
+# Threppa
 ------------
-+ 김우식
++ ## Frontend
+  + [Github Link](https://github.com/wecode-bootcamp-korea/34-1st-threppa-frontend)
++ ## Backend
+  + 김우식
 ------------
 ## Backend Process
 1. Project ERD 작성
