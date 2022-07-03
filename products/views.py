@@ -1,11 +1,12 @@
 import json
+from unicodedata import category
 
 from django.http      import JsonResponse
 from django.views     import View
 from django.db.models import Q
 
 from products.models  import Product, ProductOption, Color, Size, Cart, Category, Collection
-from products.utils   import login_decorator
+from products.utils   import login_required
 
 class ProductView(View):
     def get(self, request, product_id):
@@ -38,10 +39,11 @@ class SizeView(View):
 
 class ProductListView(View):
     def get(self, request):
-        category   = request.GET.get('category_id')
-        collection = request.GET.get('collection_id')
-        offset     = int(request.GET.get('offset', 0))
-        limit      = int(request.GET.get('limit', 5))
+        category    = request.GET.get('category_id')
+        collection  = request.GET.get('collection_id')
+        gender_type = request.GET.get('gender_type_id')
+        offset      = int(request.GET.get('offset', 0))
+        limit       = int(request.GET.get('limit', 5))
         
         q = Q()
         
@@ -49,6 +51,8 @@ class ProductListView(View):
             q &= Q(category_id=category)
         if collection:
             q &= Q(collection_id=collection)
+        if gender_type:
+            q &= Q(gender_type_id=gender_type)
         
         products = Product.objects.filter(q)[offset:offset+limit]
 
@@ -77,7 +81,7 @@ class CategoryView(View):
         return JsonResponse({"categories" : result}, status=200)
 
 class CartView(View):
-    @login_decorator
+    @login_required
     def post(self, request):
         try:
             data = json.loads(request.body)
@@ -90,7 +94,7 @@ class CartView(View):
             )
 
             cart, created = Cart.objects.get_or_create(
-                user_id = user.id, 
+                user_id           = user.id, 
                 product_option_id = product_option_id.id, 
                 defaults={'quantity': data['quantity']}
                 )
@@ -99,29 +103,46 @@ class CartView(View):
                 cart.quantity += data['quantity']
                 cart.save()
 
-            return JsonResponse({"message" : "UPDATE_CART_SUCCESS"}, status=201)
+            return JsonResponse({"message" : "CREATE_CART_SUCCESS"}, status=201)
 
         except KeyError:
             return JsonResponse({"message" : "KEYERROR"}, status = 400)
 
-    @login_decorator
+    @login_required
     def get(self, request):
         user  = request.user
         carts = Cart.objects.filter(user_id = user.id)
 
         carts =[{
+            'cart_id'      : cart.id,
             'product_id'   : cart.product_option.product.id,
             'product_name' : cart.product_option.product.name,
             'color'        : cart.product_option.color.name,
             'size'         : cart.product_option.size.sizes,
             'quantity'     : cart.quantity,
             'price'        : cart.product_option.product.price,
-            'image_url'    : cart.product_option.color.color_products_colors_images.first().image_url
+            'image_url'    : cart.product_option.color.color_products_colors_images.get(product_id = cart.product_option.product.id).image_url
         } for cart in carts ]
             
         return JsonResponse({"carts": carts}, status=200)
 
-class NavView(View):
+class CartUpdateView(View):
+    @login_required
+    def post(self, request):
+        try:
+            data = json.loads(request.body)
+
+            cart, created = Cart.objects.update_or_create(
+                id = data['cart_id'], 
+                defaults={'quantity': data['quantity']}
+                )
+
+            return JsonResponse({"message" : "UPDATE_CART_SUCCESS"}, status=201)
+
+        except KeyError:
+            return JsonResponse({"message" : "KEYERROR"}, status = 400)
+
+class CategoryCollectionView(View):
     def get(self, request):
 
         result = {
@@ -131,8 +152,8 @@ class NavView(View):
 
         return JsonResponse({"navs" : result}, status=200)
 
-class UserNavView(View):
-    @login_decorator
+class UserFullNameView(View):
+    @login_required
     def get(self, request):
 
         user = request.user
